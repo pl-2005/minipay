@@ -1,0 +1,35 @@
+# Build outputs
+target/
+dist/
+build/
+out/
+
+# Dependencies
+node_modules/
+.mvn/wrapper/maven-wrapper.jar
+
+# Runtime data
+logs/
+data/
+*.log
+
+# Local env
+.env
+.env.local
+application-local.yml
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test/cache
+.pytest_cache/
+.coverage
+coverage/
+.nyc_output/
+

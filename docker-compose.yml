@@ -1,0 +1,235 @@
+name: minipay
+
+services:
+  postgresql:
+    image: postgres:18.4
+    environment:
+      POSTGRES_DB: ${MINIPAY_POSTGRES_DB:-minipay}
+      POSTGRES_USER: ${MINIPAY_POSTGRES_USER:-minipay}
+      POSTGRES_PASSWORD: ${MINIPAY_POSTGRES_PASSWORD:-minipay_dev_password}
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MINIPAY_POSTGRES_USER:-minipay} -d ${MINIPAY_POSTGRES_DB:-minipay}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8.0.6-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4.3.2-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${MINIPAY_RABBITMQ_USER:-minipay}
+      RABBITMQ_DEFAULT_PASS: ${MINIPAY_RABBITMQ_PASSWORD:-minipay_dev_password}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  flyway:
+    image: flyway/flyway:11.15.0
+    command: -connectRetries=30 migrate
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgresql:5432/${MINIPAY_POSTGRES_DB:-minipay}
+      FLYWAY_USER: ${MINIPAY_POSTGRES_USER:-minipay}
+      FLYWAY_PASSWORD: ${MINIPAY_POSTGRES_PASSWORD:-minipay_dev_password}
+    volumes:
+      - ./db/migration:/flyway/sql:ro
+    depends_on:
+      postgresql:
+        condition: service_healthy
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: gateway-service
+    environment:
+      REDIS_HOST: redis
+      AUTH_SERVICE_URL: http://auth-service:8101
+      ORDER_SERVICE_URL: http://order-service:8102
+      PAYMENT_SERVICE_URL: http://payment-service:8103
+      MERCHANT_SERVICE_URL: http://merchant-service:8104
+      NOTIFY_SERVICE_URL: http://notify-service:8105
+      ADMIN_SERVICE_URL: http://admin-service:8106
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: auth-service
+    environment: &service-env
+      POSTGRES_HOST: postgresql
+      POSTGRES_DB: ${MINIPAY_POSTGRES_DB:-minipay}
+      POSTGRES_USER: ${MINIPAY_POSTGRES_USER:-minipay}
+      POSTGRES_PASSWORD: ${MINIPAY_POSTGRES_PASSWORD:-minipay_dev_password}
+      REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${MINIPAY_RABBITMQ_USER:-minipay}
+      RABBITMQ_PASSWORD: ${MINIPAY_RABBITMQ_PASSWORD:-minipay_dev_password}
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: order-service
+    environment:
+      <<: *service-env
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: payment-service
+    environment:
+      <<: *service-env
+      ORDER_SERVICE_URL: http://order-service:8102
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  merchant-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: merchant-service
+    environment:
+      <<: *service-env
+      ORDER_SERVICE_URL: http://order-service:8102
+      PAYMENT_SERVICE_URL: http://payment-service:8103
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  notify-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: notify-service
+    environment:
+      <<: *service-env
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  admin-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: admin-service
+    environment:
+      <<: *service-env
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - gateway-service
+
+  skywalking-oap:
+    image: apache/skywalking-oap-server:10.3.0-java21
+    environment:
+      SW_STORAGE: h2
+    ports:
+      - "11800:11800"
+      - "12800:12800"
+
+  skywalking-ui:
+    image: apache/skywalking-ui:10.3.0-java21
+    environment:
+      SW_OAP_ADDRESS: http://skywalking-oap:12800
+    ports:
+      - "8088:8080"
+    depends_on:
+      - skywalking-oap
+
+  prometheus:
+    image: prom/prometheus:v3.12.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - gateway-service
+
+  grafana:
+    image: grafana/grafana:13.0.2
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:
+  grafana-data:
+

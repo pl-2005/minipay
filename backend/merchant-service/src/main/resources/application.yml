@@ -1,0 +1,31 @@
+server:
+  port: 8104
+
+spring:
+  application:
+    name: merchant-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:minipay}
+    username: ${POSTGRES_USER:minipay}
+    password: ${POSTGRES_PASSWORD:minipay_dev_password}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+minipay:
+  clients:
+    order-service-url: ${ORDER_SERVICE_URL:http://localhost:8102}
+    payment-service-url: ${PAYMENT_SERVICE_URL:http://localhost:8103}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+

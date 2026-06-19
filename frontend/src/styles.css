@@ -1,0 +1,40 @@
+body {
+  margin: 0;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  background: #f6f7f9;
+  color: #1f2937;
+}
+
+a {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.app-header nav {
+  display: flex;
+  gap: 20px;
+}
+
+.form-panel {
+  max-width: 640px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+.action {
+  margin-top: 20px;
+}
+

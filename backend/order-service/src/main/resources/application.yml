@@ -1,0 +1,31 @@
+server:
+  port: 8102
+
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:minipay}
+    username: ${POSTGRES_USER:minipay}
+    password: ${POSTGRES_PASSWORD:minipay_dev_password}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:minipay}
+    password: ${RABBITMQ_PASSWORD:minipay_dev_password}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
