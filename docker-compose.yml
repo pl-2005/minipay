@@ -68,6 +68,9 @@ services:
         SERVICE_NAME: gateway-service
     environment:
       REDIS_HOST: redis
+      MINIPAY_FRONTEND_URL: ${MINIPAY_FRONTEND_URL:-http://localhost}
+      MINIPAY_AUTH_SECRET: ${MINIPAY_AUTH_SECRET:-minipay-dev-secret-change-me}
+      MINIPAY_TOKEN_TTL_MINUTES: ${MINIPAY_TOKEN_TTL_MINUTES:-480}
       AUTH_SERVICE_URL: http://auth-service:8101
       ORDER_SERVICE_URL: http://order-service:8102
       PAYMENT_SERVICE_URL: http://payment-service:8103
@@ -92,6 +95,8 @@ services:
       POSTGRES_USER: ${MINIPAY_POSTGRES_USER:-minipay}
       POSTGRES_PASSWORD: ${MINIPAY_POSTGRES_PASSWORD:-minipay_dev_password}
       REDIS_HOST: redis
+      MINIPAY_AUTH_SECRET: ${MINIPAY_AUTH_SECRET:-minipay-dev-secret-change-me}
+      MINIPAY_TOKEN_TTL_MINUTES: ${MINIPAY_TOKEN_TTL_MINUTES:-480}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${MINIPAY_RABBITMQ_USER:-minipay}
       RABBITMQ_PASSWORD: ${MINIPAY_RABBITMQ_PASSWORD:-minipay_dev_password}
@@ -232,4 +237,3 @@ volumes:
   redis-data:
   rabbitmq-data:
   grafana-data:
-
