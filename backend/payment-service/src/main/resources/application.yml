@@ -18,10 +18,19 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:minipay}
     password: ${RABBITMQ_PASSWORD:minipay_dev_password}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
 
 minipay:
   clients:
     order-service-url: ${ORDER_SERVICE_URL:http://localhost:8102}
+  payment:
+    rabbit-confirm-timeout-ms: ${MINIPAY_PAYMENT_RABBIT_CONFIRM_TIMEOUT_MS:5000}
+    event-publish-batch-size: ${MINIPAY_PAYMENT_EVENT_PUBLISH_BATCH_SIZE:20}
+    event-publish-fixed-delay-ms: ${MINIPAY_PAYMENT_EVENT_PUBLISH_FIXED_DELAY_MS:30000}
+    event-publish-initial-delay-ms: ${MINIPAY_PAYMENT_EVENT_PUBLISH_INITIAL_DELAY_MS:15000}
 
 management:
   endpoints:
@@ -32,4 +41,3 @@ management:
     health:
       probes:
         enabled: true
-

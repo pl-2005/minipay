@@ -6,6 +6,7 @@ WORKDIR /workspace
 
 COPY pom.xml ./pom.xml
 COPY backend ./backend
+COPY backend/maven-settings.xml /root/.m2/settings.xml
 RUN mvn -B -pl backend/${SERVICE_NAME} -am package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
@@ -15,4 +16,3 @@ WORKDIR /app
 COPY --from=builder /workspace/backend/${SERVICE_NAME}/target/*.jar /app/app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
-

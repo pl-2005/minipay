@@ -25,9 +25,8 @@ curl http://localhost:8080/actuator/health
 ## 访问入口
 
 - 前端：http://localhost
-- Gateway：http://localhost:8080
+- Gateway：http://localhost:8080（根路径重定向到 `MINIPAY_FRONTEND_URL`）
 - RabbitMQ：http://localhost:15672
 - Prometheus：http://localhost:9090
 - Grafana：http://localhost:3000
 - SkyWalking：http://localhost:8088
-

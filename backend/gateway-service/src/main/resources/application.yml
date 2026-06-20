@@ -11,37 +11,45 @@ spring:
       password: ${REDIS_PASSWORD:}
   cloud:
     gateway:
-      default-filters:
-        - name: RequestRateLimiter
-          args:
-            redis-rate-limiter.replenishRate: 50
-            redis-rate-limiter.burstCapacity: 100
-            key-resolver: "#{@remoteAddressKeyResolver}"
-      routes:
-        - id: auth-service
-          uri: ${AUTH_SERVICE_URL:http://localhost:8101}
-          predicates:
-            - Path=/api/auth/**
-        - id: order-service
-          uri: ${ORDER_SERVICE_URL:http://localhost:8102}
-          predicates:
-            - Path=/api/orders/**,/api/pay/orders/**
-        - id: payment-service
-          uri: ${PAYMENT_SERVICE_URL:http://localhost:8103}
-          predicates:
-            - Path=/api/payments/**,/api/pay/orders/*/confirm
-        - id: merchant-service
-          uri: ${MERCHANT_SERVICE_URL:http://localhost:8104}
-          predicates:
-            - Path=/api/merchant/**
-        - id: notify-service
-          uri: ${NOTIFY_SERVICE_URL:http://localhost:8105}
-          predicates:
-            - Path=/api/notifications/**
-        - id: admin-service
-          uri: ${ADMIN_SERVICE_URL:http://localhost:8106}
-          predicates:
-            - Path=/api/admin/**
+      server:
+        webflux:
+          default-filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@remoteAddressKeyResolver}"
+          routes:
+            - id: auth-service
+              uri: ${AUTH_SERVICE_URL:http://localhost:8101}
+              predicates:
+                - Path=/api/auth/**
+            - id: payment-service
+              uri: ${PAYMENT_SERVICE_URL:http://localhost:8103}
+              predicates:
+                - Path=/api/payments/**,/api/pay/orders/*/confirm
+            - id: order-service
+              uri: ${ORDER_SERVICE_URL:http://localhost:8102}
+              predicates:
+                - Path=/api/orders/**,/api/pay/orders/**
+            - id: merchant-service
+              uri: ${MERCHANT_SERVICE_URL:http://localhost:8104}
+              predicates:
+                - Path=/api/merchant/**
+            - id: notify-service
+              uri: ${NOTIFY_SERVICE_URL:http://localhost:8105}
+              predicates:
+                - Path=/api/notifications/**
+            - id: admin-service
+              uri: ${ADMIN_SERVICE_URL:http://localhost:8106}
+              predicates:
+                - Path=/api/admin/**
+
+minipay:
+  frontend-url: ${MINIPAY_FRONTEND_URL:http://localhost}
+  auth:
+    secret: ${MINIPAY_AUTH_SECRET:minipay-dev-secret-change-me}
+    token-ttl-minutes: ${MINIPAY_TOKEN_TTL_MINUTES:480}
 
 management:
   endpoints:
@@ -52,4 +60,3 @@ management:
     health:
       probes:
         enabled: true
-

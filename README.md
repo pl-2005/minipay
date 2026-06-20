@@ -3,7 +3,7 @@
 MiniPay 是一个教学支付平台期末工程项目，目标是实现可运行、可演示、可复核的支付主链路：
 
 ```text
-商户创建订单 -> 用户发起模拟支付 -> 支付状态更新 -> 结果查询与展示
+商户创建订单 -> 用户发起模拟支付 -> 支付状态更新 -> 商户结果通知 -> 结果查询与展示
 ```
 
 ## 技术栈
@@ -62,18 +62,27 @@ docker compose up -d --build
 常用入口：
 
 - 前端入口：http://localhost
-- API Gateway：http://localhost:8080
+- API Gateway：http://localhost:8080（访问根路径会跳转到前端）
 - RabbitMQ 管理台：http://localhost:15672
 - Prometheus：http://localhost:9090
 - Grafana：http://localhost:3000
 - SkyWalking UI：http://localhost:8088
+
+演示账号：
+
+- 商户：`merchant-demo` / `password`
+- 运营：`admin-demo` / `password`
+
+访问业务页面前需要先登录。前端会保存登录 token，并在请求中自动添加 `Authorization: Bearer <token>`；网关会统一校验 token 和角色权限。
+
+支付成功后会通过 RabbitMQ 触发 `notify-service` 执行商户回调。`payment-service` 会等待 RabbitMQ publisher confirm，并通过 outbox 定时任务重发未被 broker 确认的支付事件；`notify-service` 的定时任务只重试已经被消息触发过但回调失败的通知。演示商户回调地址 `merchant.example.local` 在本地环境会模拟成功，方便完整演示通知闭环。
 
 ## 开发命令
 
 后端构建：
 
 ```bash
-mvn clean package
+mvn -B -ntp verify
 ```
 
 前端开发：
@@ -84,3 +93,26 @@ npm install
 npm run dev
 ```
 
+前端 CI 构建：
+
+```bash
+cd frontend
+npm ci
+npm run build
+```
+
+Compose 配置校验：
+
+```bash
+docker compose config --quiet
+```
+
+## CI
+
+GitHub Actions workflow 位于 `.github/workflows/ci.yml`，会在推送或 PR 到 `main`、`develop` 时自动运行，也支持手动触发。
+
+当前 CI 包含三个检查：
+
+- 后端：JDK 21 + Maven，执行 `mvn -B -ntp verify`
+- 前端：Node.js 24 + npm，执行 `npm ci`、`npm test` 和 `npm run build`
+- Compose：执行 `docker compose config --quiet`

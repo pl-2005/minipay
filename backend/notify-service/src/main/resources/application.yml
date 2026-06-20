@@ -19,6 +19,15 @@ spring:
     username: ${RABBITMQ_USER:minipay}
     password: ${RABBITMQ_PASSWORD:minipay_dev_password}
 
+minipay:
+  notify:
+    max-attempts: ${MINIPAY_NOTIFY_MAX_ATTEMPTS:3}
+    retry-batch-size: ${MINIPAY_NOTIFY_RETRY_BATCH_SIZE:20}
+    retry-fixed-delay-ms: ${MINIPAY_NOTIFY_RETRY_FIXED_DELAY_MS:30000}
+    retry-initial-delay-ms: ${MINIPAY_NOTIFY_RETRY_INITIAL_DELAY_MS:10000}
+    callback-connect-timeout-ms: ${MINIPAY_NOTIFY_CALLBACK_CONNECT_TIMEOUT_MS:2000}
+    callback-read-timeout-ms: ${MINIPAY_NOTIFY_CALLBACK_READ_TIMEOUT_MS:3000}
+
 management:
   endpoints:
     web:
@@ -28,4 +37,3 @@ management:
     health:
       probes:
         enabled: true
-
