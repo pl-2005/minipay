@@ -3,6 +3,7 @@ package com.minipay.merchant.repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.springframework.jdbc.core.RowMapper;
@@ -56,33 +57,34 @@ public class PayOrderRepository {
                 .optional();
     }
 
-    public List<PayOrder> listByMerchant(String merchantNo, String status) {
-        if (status == null || status.isBlank()) {
-            return jdbcClient.sql("""
-                            SELECT id, order_no, merchant_no, merchant_order_no, subject, amount, status,
-                                   callback_url, expire_at, paid_at, created_at, updated_at
-                            FROM pay_order
-                            WHERE merchant_no = :merchantNo
-                            ORDER BY created_at DESC
-                            LIMIT 100
-                            """)
-                    .param("merchantNo", merchantNo)
-                    .query(ROW_MAPPER)
-                    .list();
-        }
-
+    public List<PayOrder> listByMerchant(String merchantNo, String keyword, String status) {
+        String normalizedKeyword = normalize(keyword);
+        String normalizedStatus = normalize(status).toUpperCase(Locale.ROOT);
         return jdbcClient.sql("""
                         SELECT id, order_no, merchant_no, merchant_order_no, subject, amount, status,
                                callback_url, expire_at, paid_at, created_at, updated_at
                         FROM pay_order
-                        WHERE merchant_no = :merchantNo AND status = :status
+                        WHERE merchant_no = :merchantNo
+                          AND (:status = '' OR status = :status)
+                          AND (
+                              :keyword = ''
+                              OR order_no ILIKE :keywordPattern
+                              OR merchant_order_no ILIKE :keywordPattern
+                              OR subject ILIKE :keywordPattern
+                          )
                         ORDER BY created_at DESC
                         LIMIT 100
                         """)
                 .param("merchantNo", merchantNo)
-                .param("status", status)
+                .param("keyword", normalizedKeyword)
+                .param("keywordPattern", "%" + normalizedKeyword + "%")
+                .param("status", normalizedStatus)
                 .query(ROW_MAPPER)
                 .list();
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.strip();
     }
 
     public void insert(

@@ -40,6 +40,21 @@
       </template>
     </el-alert>
 
+    <div class="section-title">
+      <h2>订单记录</h2>
+    </div>
+
+    <ListFilterBar
+      v-model:keyword="filters.keyword"
+      v-model:status="filters.status"
+      keyword-placeholder="平台订单号、商户订单号、商品"
+      :status-options="orderStatusOptions"
+      :total="orders.length"
+      :loading="loading"
+      @search="loadOrders"
+      @reset="resetFilters"
+    />
+
     <el-table :data="orders" v-loading="loading" border>
       <el-table-column prop="orderNo" label="平台订单号" min-width="210" />
       <el-table-column prop="merchantOrderNo" label="商户订单号" min-width="160" />
@@ -75,6 +90,7 @@ import {
   listMerchantOrders,
   type OrderItem
 } from '../api/minipay'
+import ListFilterBar from '../components/ListFilterBar.vue'
 
 const form = reactive({
   merchantNo: 'M10001',
@@ -87,16 +103,30 @@ const orders = ref<OrderItem[]>([])
 const createdOrder = ref<OrderItem | null>(null)
 const loading = ref(false)
 const creating = ref(false)
+const filters = reactive({
+  keyword: '',
+  status: ''
+})
+const orderStatusOptions = [
+  { label: '待支付', value: 'PENDING' },
+  { label: '已支付', value: 'PAID' }
+]
 
 async function loadOrders() {
   loading.value = true
   try {
-    orders.value = await listMerchantOrders(form.merchantNo)
+    orders.value = await listMerchantOrders(form.merchantNo, { ...filters })
   } catch (error) {
     ElMessage.error(getErrorMessage(error))
   } finally {
     loading.value = false
   }
+}
+
+async function resetFilters() {
+  filters.keyword = ''
+  filters.status = ''
+  await loadOrders()
 }
 
 async function submitOrder() {

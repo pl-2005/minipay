@@ -30,7 +30,8 @@ public class MerchantOrderController {
     @GetMapping("/api/merchant/orders")
     public ApiResponse<List<OrderResponse>> listOrders(
             @RequestParam(name = "merchantNo", defaultValue = "M10001") String merchantNo,
+            @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "status", required = false) String status) {
-        return ApiResponse.success(merchantOrderService.listOrders(merchantNo, status));
+        return ApiResponse.success(merchantOrderService.listOrders(merchantNo, keyword, status));
     }
 }

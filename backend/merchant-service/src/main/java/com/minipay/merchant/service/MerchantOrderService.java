@@ -39,10 +39,10 @@ public class MerchantOrderService {
                 .orElseGet(() -> createNewOrder(request, merchant));
     }
 
-    public List<OrderResponse> listOrders(String merchantNo, String status) {
+    public List<OrderResponse> listOrders(String merchantNo, String keyword, String status) {
         merchantRepository.findActiveByMerchantNo(merchantNo)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MERCHANT_NOT_FOUND));
-        return payOrderRepository.listByMerchant(merchantNo, status)
+        return payOrderRepository.listByMerchant(merchantNo, keyword, status)
                 .stream()
                 .map(this::toResponse)
                 .toList();

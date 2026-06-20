@@ -44,6 +44,18 @@ Authorization: Bearer <token>
 | 查询支付事件 | GET | `/api/admin/events` | admin-service |
 | 查询通知记录 | GET | `/api/admin/notifications` | admin-service |
 
+列表查询参数：
+
+| 接口 | 参数 |
+| --- | --- |
+| `/api/merchant/orders` | `merchantNo`、`keyword`、`status` |
+| `/api/admin/orders` | `keyword`、`status` |
+| `/api/admin/payments` | `keyword`、`status` |
+| `/api/admin/events` | `keyword`、`eventType`、`status` |
+| `/api/admin/notifications` | `keyword`、`status` |
+
+`keyword` 为不区分大小写的模糊搜索，筛选在数据库查询中执行后再返回最近 100 条记录。
+
 ## 演示账号
 
 | 用户名 | 密码 | 角色 |
