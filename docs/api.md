@@ -14,7 +14,7 @@
 
 ## 鉴权
 
-除 `/api/auth/login` 和健康检查接口外，业务接口都需要携带 token：
+除登录、商户注册和健康检查接口外，业务接口都需要携带 token：
 
 ```http
 Authorization: Bearer <token>
@@ -34,7 +34,9 @@ Authorization: Bearer <token>
 | 场景 | 方法 | 路径 | 服务 |
 | --- | --- | --- | --- |
 | 登录 | POST | `/api/auth/login` | auth-service |
+| 注册商户 | POST | `/api/auth/register/merchant` | auth-service |
 | 创建订单 | POST | `/api/merchant/orders` | merchant-service / order-service |
+| 查询有效商户选项 | GET | `/api/merchant/merchants` | merchant-service |
 | 查询支付页订单 | GET | `/api/pay/orders/{orderNo}` | order-service |
 | 模拟支付 | POST | `/api/pay/orders/{orderNo}/confirm` | payment-service |
 | 查询订单详情 | GET | `/api/orders/{orderNo}` | order-service |
@@ -44,12 +46,31 @@ Authorization: Bearer <token>
 | 查询支付事件 | GET | `/api/admin/events` | admin-service |
 | 查询通知记录 | GET | `/api/admin/notifications` | admin-service |
 
+列表查询参数：
+
+| 接口 | 参数 |
+| --- | --- |
+| `/api/merchant/orders` | `merchantNo`、`keyword`、`status` |
+| `/api/admin/orders` | `keyword`、`status` |
+| `/api/admin/payments` | `keyword`、`status` |
+| `/api/admin/events` | `keyword`、`eventType`、`status` |
+| `/api/admin/notifications` | `keyword`、`status` |
+
+`keyword` 为不区分大小写的模糊搜索，筛选在数据库查询中执行后再返回最近 100 条记录。
+
 ## 演示账号
 
-| 用户名 | 密码 | 角色 |
-| --- | --- | --- |
-| `merchant-demo` | `password` | 商户 |
-| `admin-demo` | `password` | 运营 |
+| 用户名 | 密码 | 角色 | 关联商户 |
+| --- | --- | --- | --- |
+| `merchant-demo` | `password` | 商户 | `M10001` 至 `M10006` 全部演示商户 |
+| `merchant-sunrise` | `password` | 商户 | `M10002` Sunrise Market |
+| `merchant-harbor` | `password` | 商户 | `M10003` Blue Harbor Hotel |
+| `merchant-northwind` | `password` | 商户 | `M10004` Northwind Books |
+| `merchant-greenfield` | `password` | 商户 | `M10005` Green Field Cafe |
+| `merchant-nova` | `password` | 商户 | `M10006` Nova Digital |
+| `admin-demo` | `password` | 运营 | 不关联商户 |
+
+`merchant-demo` 关联全部演示商户，用于验证商户搜索和切换；其他演示商户账号及新注册账号只能访问自己关联的商户。
 
 ## 登录请求
 
@@ -70,6 +91,19 @@ Authorization: Bearer <token>
   "expiresAt": 1781880000
 }
 ```
+
+## 商户注册请求
+
+```json
+{
+  "username": "merchant-new",
+  "password": "password123",
+  "merchantName": "New Merchant",
+  "callbackUrl": "https://merchant.example.com/pay/callback"
+}
+```
+
+注册会同时创建商户账号、商户资料和归属关系，并直接返回登录 token 与系统生成的 `merchantNo`。`callbackUrl` 可不填写。
 
 ## 创建订单请求
 

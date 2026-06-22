@@ -9,7 +9,21 @@
       <el-row :gutter="16">
         <el-col :xs="24" :md="12">
           <el-form-item label="商户号">
-            <el-input v-model="form.merchantNo" />
+            <el-select
+              v-model="form.merchantNo"
+              filterable
+              placeholder="请选择商户"
+              :loading="merchantLoading"
+              class="full-control"
+              @change="handleMerchantChange"
+            >
+              <el-option
+                v-for="merchant in merchantOptions"
+                :key="merchant.merchantNo"
+                :label="`${merchant.merchantName}（${merchant.merchantNo}）`"
+                :value="merchant.merchantNo"
+              />
+            </el-select>
           </el-form-item>
         </el-col>
         <el-col :xs="24" :md="12">
@@ -29,7 +43,13 @@
         </el-col>
       </el-row>
       <el-form-item>
-        <el-button type="primary" :icon="Plus" :loading="creating" @click="submitOrder">创建订单</el-button>
+        <el-button
+          type="primary"
+          :icon="Plus"
+          :loading="creating"
+          :disabled="!form.merchantNo || merchantLoading"
+          @click="submitOrder"
+        >创建订单</el-button>
       </el-form-item>
     </el-form>
 
@@ -39,6 +59,21 @@
         <RouterLink :to="`/pay/${createdOrder.orderNo}`" class="inline-link">进入支付</RouterLink>
       </template>
     </el-alert>
+
+    <div class="section-title">
+      <h2>订单记录</h2>
+    </div>
+
+    <ListFilterBar
+      v-model:keyword="filters.keyword"
+      v-model:status="filters.status"
+      keyword-placeholder="平台订单号、商户订单号、商品"
+      :status-options="orderStatusOptions"
+      :total="orders.length"
+      :loading="loading"
+      @search="loadOrders"
+      @reset="resetFilters"
+    />
 
     <el-table :data="orders" v-loading="loading" border>
       <el-table-column prop="orderNo" label="平台订单号" min-width="210" />
@@ -72,12 +107,15 @@ import { Plus, Refresh } from '@element-plus/icons-vue'
 import {
   createMerchantOrder,
   getErrorMessage,
+  listMerchantOptions,
   listMerchantOrders,
+  type MerchantOption,
   type OrderItem
 } from '../api/minipay'
+import ListFilterBar from '../components/ListFilterBar.vue'
 
 const form = reactive({
-  merchantNo: 'M10001',
+  merchantNo: '',
   merchantOrderNo: `MO${Date.now()}`,
   subject: '测试商品',
   amount: 99.9
@@ -87,16 +125,55 @@ const orders = ref<OrderItem[]>([])
 const createdOrder = ref<OrderItem | null>(null)
 const loading = ref(false)
 const creating = ref(false)
+const merchantLoading = ref(false)
+const merchantOptions = ref<MerchantOption[]>([])
+const filters = reactive({
+  keyword: '',
+  status: ''
+})
+const orderStatusOptions = [
+  { label: '待支付', value: 'PENDING' },
+  { label: '已支付', value: 'PAID' }
+]
 
 async function loadOrders() {
+  if (!form.merchantNo) {
+    orders.value = []
+    return
+  }
   loading.value = true
   try {
-    orders.value = await listMerchantOrders(form.merchantNo)
+    orders.value = await listMerchantOrders(form.merchantNo, { ...filters })
   } catch (error) {
     ElMessage.error(getErrorMessage(error))
   } finally {
     loading.value = false
   }
+}
+
+async function loadMerchants() {
+  merchantLoading.value = true
+  try {
+    merchantOptions.value = await listMerchantOptions()
+    if (!merchantOptions.value.some((merchant) => merchant.merchantNo === form.merchantNo)) {
+      form.merchantNo = merchantOptions.value[0]?.merchantNo ?? ''
+    }
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error))
+  } finally {
+    merchantLoading.value = false
+  }
+}
+
+async function handleMerchantChange() {
+  createdOrder.value = null
+  await loadOrders()
+}
+
+async function resetFilters() {
+  filters.keyword = ''
+  filters.status = ''
+  await loadOrders()
 }
 
 async function submitOrder() {
@@ -123,5 +200,8 @@ function formatTime(value?: string) {
   return value ? value.replace('T', ' ').slice(0, 19) : '-'
 }
 
-onMounted(loadOrders)
+onMounted(async () => {
+  await loadMerchants()
+  await loadOrders()
+})
 </script>

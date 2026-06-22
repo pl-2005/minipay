@@ -35,7 +35,11 @@ public class PaymentService {
         this.transactionTemplate = transactionTemplate;
     }
 
-    public PaymentConfirmResponse confirm(String orderNo, ConfirmPaymentRequest request) {
+    public PaymentConfirmResponse confirm(String username, String orderNo, ConfirmPaymentRequest request) {
+        if (!paymentRepository.userCanAccessOrder(username, orderNo)) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
         String idempotencyKey = StringUtils.hasText(request.idempotencyKey())
                 ? request.idempotencyKey()
                 : DEFAULT_IDEMPOTENCY_KEY;

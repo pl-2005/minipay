@@ -19,12 +19,29 @@ export interface LoginResponse {
   expiresAt: number
 }
 
+export interface RegisterMerchantPayload {
+  username: string
+  password: string
+  merchantName: string
+  callbackUrl?: string
+}
+
+export interface RegisterMerchantResponse extends LoginResponse {
+  merchantNo: string
+  merchantName: string
+}
+
 export interface CreateOrderPayload {
   merchantNo: string
   merchantOrderNo: string
   subject: string
   amount: number
   callbackUrl?: string
+}
+
+export interface MerchantOption {
+  merchantNo: string
+  merchantName: string
 }
 
 export interface OrderItem {
@@ -80,6 +97,15 @@ export interface AdminNotification {
   createdAt: string
 }
 
+export interface ListQuery {
+  keyword?: string
+  status?: string
+}
+
+export interface EventListQuery extends ListQuery {
+  eventType?: string
+}
+
 function unwrap<T>(response: ApiResponse<T>): T {
   if (response.code !== 'SUCCESS') {
     throw new Error(response.message || response.code)
@@ -110,10 +136,20 @@ export async function login(payload: LoginPayload): Promise<AuthSession> {
   return unwrap(response.data)
 }
 
-export async function listMerchantOrders(merchantNo: string): Promise<OrderItem[]> {
+export async function registerMerchant(payload: RegisterMerchantPayload): Promise<AuthSession> {
+  const response = await http.post<ApiResponse<RegisterMerchantResponse>>('/auth/register/merchant', payload)
+  return unwrap(response.data)
+}
+
+export async function listMerchantOrders(merchantNo: string, query: ListQuery = {}): Promise<OrderItem[]> {
   const response = await http.get<ApiResponse<OrderItem[]>>('/merchant/orders', {
-    params: { merchantNo }
+    params: { merchantNo, ...query }
   })
+  return unwrap(response.data)
+}
+
+export async function listMerchantOptions(): Promise<MerchantOption[]> {
+  const response = await http.get<ApiResponse<MerchantOption[]>>('/merchant/merchants')
   return unwrap(response.data)
 }
 
@@ -130,22 +166,22 @@ export async function confirmPayment(order: OrderItem): Promise<PaymentResult> {
   return unwrap(response.data)
 }
 
-export async function listAdminOrders(): Promise<OrderItem[]> {
-  const response = await http.get<ApiResponse<OrderItem[]>>('/admin/orders')
+export async function listAdminOrders(query: ListQuery = {}): Promise<OrderItem[]> {
+  const response = await http.get<ApiResponse<OrderItem[]>>('/admin/orders', { params: query })
   return unwrap(response.data)
 }
 
-export async function listAdminPayments(): Promise<AdminPayment[]> {
-  const response = await http.get<ApiResponse<AdminPayment[]>>('/admin/payments')
+export async function listAdminPayments(query: ListQuery = {}): Promise<AdminPayment[]> {
+  const response = await http.get<ApiResponse<AdminPayment[]>>('/admin/payments', { params: query })
   return unwrap(response.data)
 }
 
-export async function listAdminEvents(): Promise<AdminEvent[]> {
-  const response = await http.get<ApiResponse<AdminEvent[]>>('/admin/events')
+export async function listAdminEvents(query: EventListQuery = {}): Promise<AdminEvent[]> {
+  const response = await http.get<ApiResponse<AdminEvent[]>>('/admin/events', { params: query })
   return unwrap(response.data)
 }
 
-export async function listAdminNotifications(): Promise<AdminNotification[]> {
-  const response = await http.get<ApiResponse<AdminNotification[]>>('/admin/notifications')
+export async function listAdminNotifications(query: ListQuery = {}): Promise<AdminNotification[]> {
+  const response = await http.get<ApiResponse<AdminNotification[]>>('/admin/notifications', { params: query })
   return unwrap(response.data)
 }

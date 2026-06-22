@@ -14,19 +14,19 @@ public class AdminQueryService {
         this.adminRepository = adminRepository;
     }
 
-    public List<AdminOrderResponse> listOrders(String status) {
-        return adminRepository.listOrders(status);
+    public List<AdminOrderResponse> listOrders(String keyword, String status) {
+        return adminRepository.listOrders(keyword, status);
     }
 
-    public List<AdminPaymentResponse> listPayments() {
-        return adminRepository.listPayments();
+    public List<AdminPaymentResponse> listPayments(String keyword, String status) {
+        return adminRepository.listPayments(keyword, status);
     }
 
-    public List<AdminEventResponse> listEvents() {
-        return adminRepository.listEvents();
+    public List<AdminEventResponse> listEvents(String keyword, String eventType, String status) {
+        return adminRepository.listEvents(keyword, eventType, status);
     }
 
-    public List<AdminNotificationResponse> listNotifications() {
-        return adminRepository.listNotifications();
+    public List<AdminNotificationResponse> listNotifications(String keyword, String status) {
+        return adminRepository.listNotifications(keyword, status);
     }
 }

@@ -23,22 +23,30 @@ public class AdminController {
 
     @GetMapping("/api/admin/orders")
     public ApiResponse<List<AdminOrderResponse>> listOrders(
+            @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "status", required = false) String status) {
-        return ApiResponse.success(adminQueryService.listOrders(status));
+        return ApiResponse.success(adminQueryService.listOrders(keyword, status));
     }
 
     @GetMapping("/api/admin/payments")
-    public ApiResponse<List<AdminPaymentResponse>> listPayments() {
-        return ApiResponse.success(adminQueryService.listPayments());
+    public ApiResponse<List<AdminPaymentResponse>> listPayments(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "status", required = false) String status) {
+        return ApiResponse.success(adminQueryService.listPayments(keyword, status));
     }
 
     @GetMapping("/api/admin/events")
-    public ApiResponse<List<AdminEventResponse>> listEvents() {
-        return ApiResponse.success(adminQueryService.listEvents());
+    public ApiResponse<List<AdminEventResponse>> listEvents(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "eventType", required = false) String eventType,
+            @RequestParam(name = "status", required = false) String status) {
+        return ApiResponse.success(adminQueryService.listEvents(keyword, eventType, status));
     }
 
     @GetMapping("/api/admin/notifications")
-    public ApiResponse<List<AdminNotificationResponse>> listNotifications() {
-        return ApiResponse.success(adminQueryService.listNotifications());
+    public ApiResponse<List<AdminNotificationResponse>> listNotifications(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "status", required = false) String status) {
+        return ApiResponse.success(adminQueryService.listNotifications(keyword, status));
     }
 }

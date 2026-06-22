@@ -30,8 +30,8 @@ public class MerchantOrderService {
     }
 
     @Transactional
-    public OrderResponse createOrder(CreateOrderRequest request) {
-        Merchant merchant = merchantRepository.findActiveByMerchantNo(request.merchantNo())
+    public OrderResponse createOrder(String username, CreateOrderRequest request) {
+        Merchant merchant = merchantRepository.findActiveForUser(username, request.merchantNo())
                 .orElseThrow(() -> new BusinessException(ErrorCode.MERCHANT_NOT_FOUND));
 
         return payOrderRepository.findByMerchantOrderNo(request.merchantNo(), request.merchantOrderNo())
@@ -39,12 +39,19 @@ public class MerchantOrderService {
                 .orElseGet(() -> createNewOrder(request, merchant));
     }
 
-    public List<OrderResponse> listOrders(String merchantNo, String status) {
-        merchantRepository.findActiveByMerchantNo(merchantNo)
+    public List<OrderResponse> listOrders(String username, String merchantNo, String keyword, String status) {
+        merchantRepository.findActiveForUser(username, merchantNo)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MERCHANT_NOT_FOUND));
-        return payOrderRepository.listByMerchant(merchantNo, status)
+        return payOrderRepository.listByMerchant(merchantNo, keyword, status)
                 .stream()
                 .map(this::toResponse)
+                .toList();
+    }
+
+    public List<MerchantOptionResponse> listActiveMerchants(String username) {
+        return merchantRepository.listActiveForUser(username)
+                .stream()
+                .map(merchant -> new MerchantOptionResponse(merchant.merchantNo(), merchant.merchantName()))
                 .toList();
     }
 

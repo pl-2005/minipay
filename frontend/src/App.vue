@@ -1,6 +1,6 @@
 <template>
   <el-container class="app-shell">
-    <el-header v-if="!isLoginPage" class="app-header">
+    <el-header v-if="!isPublicPage" class="app-header">
       <strong>MiniPay</strong>
       <nav>
         <RouterLink v-if="canUseMerchant" to="/merchant/orders">商户订单</RouterLink>
@@ -28,7 +28,7 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const isLoginPage = computed(() => route.path === '/login')
+const isPublicPage = computed(() => Boolean(route.meta.public))
 const canUseAdmin = computed(() => hasRoleAccess(authStore.role, ['ADMIN']))
 const canUseMerchant = computed(() => hasRoleAccess(authStore.role, ['MERCHANT']))
 

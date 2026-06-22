@@ -28,4 +28,24 @@ public class UserRepository {
                         rs.getString("status")))
                 .optional();
     }
+
+    public boolean existsByUsername(String username) {
+        return jdbcClient.sql("SELECT EXISTS(SELECT 1 FROM app_user WHERE username = :username)")
+                .param("username", username)
+                .query(Boolean.class)
+                .single();
+    }
+
+    public long insert(String username, String passwordHash, String role) {
+        return jdbcClient.sql("""
+                        INSERT INTO app_user (username, password_hash, role)
+                        VALUES (:username, :passwordHash, :role)
+                        RETURNING id
+                        """)
+                .param("username", username)
+                .param("passwordHash", passwordHash)
+                .param("role", role)
+                .query(Long.class)
+                .single();
+    }
 }

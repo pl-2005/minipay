@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -21,8 +22,9 @@ public class PaymentController {
 
     @PostMapping("/api/pay/orders/{orderNo}/confirm")
     public ApiResponse<PaymentConfirmResponse> confirm(
+            @RequestHeader("X-MiniPay-Username") String username,
             @PathVariable("orderNo") String orderNo,
             @Valid @RequestBody ConfirmPaymentRequest request) {
-        return ApiResponse.success(paymentService.confirm(orderNo, request));
+        return ApiResponse.success(paymentService.confirm(username, orderNo, request));
     }
 }

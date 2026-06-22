@@ -12,6 +12,9 @@
         <el-segmented v-model="demoRole" :options="demoOptions" @change="fillDemoAccount" />
       </el-form-item>
       <el-button type="primary" native-type="submit" :loading="loading" class="full-control">登录</el-button>
+      <div class="auth-switch">
+        <RouterLink to="/register">注册商户</RouterLink>
+      </div>
     </el-form>
   </section>
 </template>
