@@ -28,13 +28,22 @@ public class PayOrderRepository {
         this.jdbcClient = jdbcClient;
     }
 
-    public Optional<PayOrder> findByOrderNo(String orderNo) {
+    public Optional<PayOrder> findByOrderNoForUser(String username, String orderNo) {
         return jdbcClient.sql("""
-                        SELECT id, order_no, merchant_no, merchant_order_no, subject, amount, status,
-                               callback_url, expire_at, paid_at, created_at, updated_at
+                        SELECT pay_order.id, pay_order.order_no, pay_order.merchant_no,
+                               pay_order.merchant_order_no, pay_order.subject, pay_order.amount,
+                               pay_order.status, pay_order.callback_url, pay_order.expire_at,
+                               pay_order.paid_at, pay_order.created_at, pay_order.updated_at
                         FROM pay_order
-                        WHERE order_no = :orderNo
+                        JOIN merchant ON merchant.merchant_no = pay_order.merchant_no
+                        JOIN merchant_user ON merchant_user.merchant_id = merchant.id
+                        JOIN app_user ON app_user.id = merchant_user.user_id
+                        WHERE app_user.username = :username
+                          AND app_user.status = 'ACTIVE'
+                          AND merchant.status = 'ACTIVE'
+                          AND pay_order.order_no = :orderNo
                         """)
+                .param("username", username)
                 .param("orderNo", orderNo)
                 .query(ROW_MAPPER)
                 .optional();

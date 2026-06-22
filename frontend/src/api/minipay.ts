@@ -19,12 +19,29 @@ export interface LoginResponse {
   expiresAt: number
 }
 
+export interface RegisterMerchantPayload {
+  username: string
+  password: string
+  merchantName: string
+  callbackUrl?: string
+}
+
+export interface RegisterMerchantResponse extends LoginResponse {
+  merchantNo: string
+  merchantName: string
+}
+
 export interface CreateOrderPayload {
   merchantNo: string
   merchantOrderNo: string
   subject: string
   amount: number
   callbackUrl?: string
+}
+
+export interface MerchantOption {
+  merchantNo: string
+  merchantName: string
 }
 
 export interface OrderItem {
@@ -119,10 +136,20 @@ export async function login(payload: LoginPayload): Promise<AuthSession> {
   return unwrap(response.data)
 }
 
+export async function registerMerchant(payload: RegisterMerchantPayload): Promise<AuthSession> {
+  const response = await http.post<ApiResponse<RegisterMerchantResponse>>('/auth/register/merchant', payload)
+  return unwrap(response.data)
+}
+
 export async function listMerchantOrders(merchantNo: string, query: ListQuery = {}): Promise<OrderItem[]> {
   const response = await http.get<ApiResponse<OrderItem[]>>('/merchant/orders', {
     params: { merchantNo, ...query }
   })
+  return unwrap(response.data)
+}
+
+export async function listMerchantOptions(): Promise<MerchantOption[]> {
+  const response = await http.get<ApiResponse<MerchantOption[]>>('/merchant/merchants')
   return unwrap(response.data)
 }
 

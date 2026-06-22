@@ -70,8 +70,15 @@ docker compose up -d --build
 
 演示账号：
 
-- 商户：`merchant-demo` / `password`
-- 运营：`admin-demo` / `password`
+| 用户名 | 密码 | 角色 | 关联商户 |
+| --- | --- | --- | --- |
+| `merchant-demo` | `password` | 商户 | 全部演示商户 |
+| `merchant-sunrise` | `password` | 商户 | `M10002` Sunrise Market |
+| `merchant-harbor` | `password` | 商户 | `M10003` Blue Harbor Hotel |
+| `merchant-northwind` | `password` | 商户 | `M10004` Northwind Books |
+| `merchant-greenfield` | `password` | 商户 | `M10005` Green Field Cafe |
+| `merchant-nova` | `password` | 商户 | `M10006` Nova Digital |
+| `admin-demo` | `password` | 运营 | 不关联商户 |
 
 访问业务页面前需要先登录。前端会保存登录 token，并在请求中自动添加 `Authorization: Bearer <token>`；网关会统一校验 token 和角色权限。
 

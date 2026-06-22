@@ -53,6 +53,26 @@ public class PaymentRepository {
         this.jdbcClient = jdbcClient;
     }
 
+    public boolean userCanAccessOrder(String username, String orderNo) {
+        return jdbcClient.sql("""
+                        SELECT EXISTS(
+                            SELECT 1
+                            FROM pay_order
+                            JOIN merchant ON merchant.merchant_no = pay_order.merchant_no
+                            JOIN merchant_user ON merchant_user.merchant_id = merchant.id
+                            JOIN app_user ON app_user.id = merchant_user.user_id
+                            WHERE app_user.username = :username
+                              AND app_user.status = 'ACTIVE'
+                              AND merchant.status = 'ACTIVE'
+                              AND pay_order.order_no = :orderNo
+                        )
+                        """)
+                .param("username", username)
+                .param("orderNo", orderNo)
+                .query(Boolean.class)
+                .single();
+    }
+
     public Optional<PayOrder> findOrderForUpdate(String orderNo) {
         return jdbcClient.sql("""
                         SELECT id, order_no, merchant_no, merchant_order_no, subject, amount, status,

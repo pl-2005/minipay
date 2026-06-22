@@ -6,11 +6,13 @@ import MerchantOrdersView from './views/MerchantOrdersView.vue'
 import PaymentView from './views/PaymentView.vue'
 import AdminView from './views/AdminView.vue'
 import LoginView from './views/LoginView.vue'
+import RegisterView from './views/RegisterView.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/login', component: LoginView, meta: { public: true } },
+    { path: '/register', component: RegisterView, meta: { public: true } },
     {
       path: '/',
       redirect: () => {

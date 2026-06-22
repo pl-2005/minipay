@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 
-import { login, type LoginPayload } from '../api/minipay'
+import {
+  login,
+  registerMerchant,
+  type LoginPayload,
+  type RegisterMerchantPayload
+} from '../api/minipay'
 import { clearSession, loadSession, saveSession, type AuthSession, type UserRole } from '../auth/session'
 
 interface AuthState {
@@ -19,6 +24,12 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     async login(payload: LoginPayload) {
       const session = await login(payload)
+      this.session = session
+      saveSession(session)
+      return session
+    },
+    async registerMerchant(payload: RegisterMerchantPayload) {
+      const session = await registerMerchant(payload)
       this.session = session
       saveSession(session)
       return session

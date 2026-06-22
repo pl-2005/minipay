@@ -16,10 +16,19 @@ class MerchantOrderControllerTest {
 
     @Test
     void forwardsMerchantOrderFilters() {
-        when(orderService.listOrders("M10001", "order", "PAID")).thenReturn(List.of());
+        when(orderService.listOrders("merchant-demo", "M10001", "order", "PAID")).thenReturn(List.of());
 
-        controller.listOrders("M10001", "order", "PAID");
+        controller.listOrders("merchant-demo", "M10001", "order", "PAID");
 
-        verify(orderService).listOrders("M10001", "order", "PAID");
+        verify(orderService).listOrders("merchant-demo", "M10001", "order", "PAID");
+    }
+
+    @Test
+    void returnsActiveMerchantOptions() {
+        when(orderService.listActiveMerchants("merchant-demo")).thenReturn(List.of());
+
+        controller.listMerchants("merchant-demo");
+
+        verify(orderService).listActiveMerchants("merchant-demo");
     }
 }

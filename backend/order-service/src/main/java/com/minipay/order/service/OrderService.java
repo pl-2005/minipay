@@ -15,8 +15,8 @@ public class OrderService {
         this.payOrderRepository = payOrderRepository;
     }
 
-    public OrderDetailResponse getOrder(String orderNo) {
-        PayOrder order = payOrderRepository.findByOrderNo(orderNo)
+    public OrderDetailResponse getOrder(String username, String orderNo) {
+        PayOrder order = payOrderRepository.findByOrderNoForUser(username, orderNo)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         return toResponse(order);
     }
