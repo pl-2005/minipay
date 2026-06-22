@@ -1,0 +1,89 @@
+### 1. 商户创建订单（正常下单）
+POST http://localhost:8104/api/merchant/orders
+Content-Type: application/json
+
+{
+  "merchantNo": "M10001",
+  "merchantOrderNo": "M20260621001",
+  "subject": "手机充值100元",
+  "amount": 100.00,
+  "callbackUrl": "https://merchant-demo.com/pay/callback"
+}
+
+### 2. 商户创建订单（不传callback，使用商户默认回调）
+POST http://localhost:8104/api/merchant/orders
+Content-Type: application/json
+
+{
+  "merchantNo": "M10001",
+  "merchantOrderNo": "M20260621002",
+  "subject": "会员月度套餐",
+  "amount": 29.90,
+  "callbackUrl": ""
+}
+
+### 3. 商户创建订单-幂等测试（重复外部商户单号，直接返回已有订单）
+POST http://localhost:8104/api/merchant/orders
+Content-Type: application/json
+
+{
+  "merchantNo": "M10001",
+  "merchantOrderNo": "M20260621001",
+  "subject": "手机充值100元",
+  "amount": 100.00,
+  "callbackUrl": "https://merchant-demo.com/pay/callback"
+}
+
+### 4. 创建订单参数校验失败（金额0元，@DecimalMin("0.01")）
+POST http://localhost:8104/api/merchant/orders
+Content-Type: application/json
+
+{
+  "merchantNo": "M10001",
+  "merchantOrderNo": "M20260621003",
+  "subject": "测试商品",
+  "amount": 0.00,
+  "callbackUrl": ""
+}
+
+### 5. 创建订单-非法商户号（不存在商户，抛 MERCHANT_NOT_FOUND）
+POST http://localhost:8104/api/merchant/orders
+Content-Type: application/json
+
+{
+  "merchantNo": "M99999",
+  "merchantOrderNo": "M20260621004",
+  "subject": "测试商品",
+  "amount": 9.90,
+  "callbackUrl": ""
+}
+
+### 6. 查询商户全部订单（不传status）
+GET http://localhost:8104/api/merchant/orders?merchantNo=M10001
+
+### 7. 查询商户指定状态订单（待支付 PENDING）
+GET http://localhost:8104/api/merchant/orders?merchantNo=M10001&status=PENDING
+
+### 8. 查询商户指定状态订单（已支付 PAID）
+GET http://localhost:8104/api/merchant/orders?merchantNo=M10001&status=PAID
+
+### 9. 订单详情查询接口1 order-service /api/orders/{orderNo}
+# 替换下方 P20260621xxxx 为真实创建返回的 orderNo
+GET http://localhost:8102/api/orders/P20260621190255BDF9ED31
+
+### 10. 订单详情查询接口2 /api/pay/orders/{orderNo}
+GET http://localhost:8102/api/pay/orders/P20260621190255BDF9ED31
+
+### 11. 查询不存在的订单（返回 ORDER_NOT_FOUND）
+GET http://localhost:8102/api/orders/P99999999999999999999
+
+## 附加：模拟支付成功MQ事件（仅用于调试，无HTTP接口，附JSON事件体）
+# PaySuccessEvent MQ消息体，可发送到 pay.success.order.queue
+/*
+{
+  "orderNo": "P20260621101010XXXXXXXX",
+  "thirdTradeNo": "ALI20260621221000001",
+  "payAmount": 100.00,
+  "payTime": "2026-06-21T15:30:20"
+}
+*/
