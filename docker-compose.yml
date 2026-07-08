@@ -54,6 +54,7 @@ services:
       FLYWAY_URL: jdbc:postgresql://postgresql:5432/${MINIPAY_POSTGRES_DB:-minipay}
       FLYWAY_USER: ${MINIPAY_POSTGRES_USER:-minipay}
       FLYWAY_PASSWORD: ${MINIPAY_POSTGRES_PASSWORD:-minipay_dev_password}
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
     volumes:
       - ./db/migration:/flyway/sql:ro
     depends_on:
